@@ -108,6 +108,7 @@ lazy val commonSettings = Def.settings(
   ),
   scalaVersion       := Dependencies.Scala213,
   crossScalaVersions := Seq(Dependencies.Scala212, Dependencies.Scala213, Dependencies.Scala3),
+  libraryDependencies += "org.eclipse.collections" % "eclipse-collections" % "11.1.0",
   Compile / javacOptions ++= javacSettings,
   Test / javacOptions ++= javacSettings,
   Compile / compile / javacOptions ++= Seq("--release", "17"), // sbt #1785, avoids passing to javadoc
@@ -121,15 +122,15 @@ lazy val commonSettings = Def.settings(
 
 lazy val root = project
   .in(file("."))
-  .enablePlugins(ScalaJSPlugin)
+  // .enablePlugins(ScalaJSPlugin)
   .disablePlugins(MimaPlugin)
   .aggregate(
-    `play-jsonJS`,
+    // `play-jsonJS`,
     `play-jsonJVM`,
-    `play-jsonNative`,
-    `play-functionalJS`,
+    // `play-jsonNative`,
+    // `play-functionalJS`,
     `play-functionalJVM`,
-    `play-functionalNative`,
+    // `play-functionalNative`,
     `play-json-joda`
   )
   .settings(commonSettings)

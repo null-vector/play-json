@@ -114,7 +114,7 @@ object JsArray extends (IndexedSeq[JsValue] => JsArray) {
  * Represent a Json object value.
  */
 case class JsObject(
-    private[json] val underlying: Map[String, JsValue]
+    private[json] val underlying: mutable.Map[String, JsValue]
 ) extends JsValue {
 
   /**
@@ -125,10 +125,7 @@ case class JsObject(
   /**
    * The value of this JsObject as an immutable map.
    */
-  def value: Map[String, JsValue] = underlying match {
-    case m: immutable.Map[String, JsValue] => m
-    case m                                 => JsObject.createFieldsMap(m)
-  }
+  def value: Map[String, JsValue] = JsObject.createFieldsMap(underlying)
 
   /**
    * Return all fields as a set
@@ -148,24 +145,42 @@ case class JsObject(
   /**
    * Merge this object with another one. Values from other override value of the current object.
    */
-  def ++(other: JsObject): JsObject = JsObject(underlying ++ other.underlying)
+  def ++(other: JsObject): JsObject = {
+    val um = MMapBuilder.empty[String, JsValue]()
+    um ++= underlying
+    um ++= other.underlying
+    JsObject(um)
+  }
 
   /**
    * Removes one field from the JsObject
    */
-  def -(otherField: String): JsObject = JsObject(underlying - otherField)
+  def -(otherField: String): JsObject = {
+    val um = MMapBuilder.empty[String, JsValue]()
+    um ++= underlying
+    um -= otherField
+    JsObject(um)
+  }
 
   /**
    * Adds one field to the JsObject
    */
-  def +(otherField: (String, JsValue)): JsObject = JsObject(underlying + otherField)
+  def +(otherField: (String, JsValue)): JsObject = {
+    val um = MMapBuilder.empty[String, JsValue]()
+    um ++= underlying
+    um += otherField
+    JsObject(um)
+  }
 
   /**
    * merges everything in depth and doesn't stop at first level, as ++ does
    */
   def deepMerge(other: JsObject): JsObject = {
     def merge(existingObject: JsObject, otherObject: JsObject): JsObject = {
-      val result = existingObject.underlying ++ otherObject.underlying.map { case (otherKey, otherValue) =>
+      val um = MMapBuilder.empty[String, JsValue]()
+      um ++= existingObject.underlying
+      um ++= otherObject.underlying
+      val result = um.map { case (otherKey, otherValue) =>
         val maybeExistingValue = existingObject.underlying.get(otherKey)
 
         val newValue = (maybeExistingValue, otherValue) match {
@@ -195,24 +210,26 @@ case class JsObject(
   override def hashCode(): Int = MurmurHash3.unorderedHash(underlying, MurmurHash3.setSeed)
 }
 
-object JsObject extends (Seq[(String, JsValue)] => JsObject) {
+object JsObject extends (Iterable[(String, JsValue)] => JsObject) {
 
   /**
    * INTERNAL API: create a fields map by wrapping a Java LinkedHashMap.
    *
    * We use this because the Java implementation better handles hash code collisions for Comparable keys.
    */
-  private[json] def createFieldsMap(fields: Iterable[(String, JsValue)] = Seq.empty): immutable.Map[String, JsValue] = {
-    (ImmutableLinkedHashMap.newBuilder ++= fields).result()
+  private[json] def createFieldsMap(fields: Iterable[(String, JsValue)] = Seq.empty): mutable.Map[String, JsValue] = {
+    val um = MMapBuilder.empty[String, JsValue]()
+    um ++= fields
+    um
   }
 
   /**
    * Construct a new JsObject, with the order of fields in the Seq.
    */
-  def apply(fields: collection.Seq[(String, JsValue)]): JsObject = new JsObject(createFieldsMap(fields))
+  def apply(fields: Iterable[(String, JsValue)]): JsObject = new JsObject(createFieldsMap(fields))
 
   /** An empty JSON object */
-  def empty = JsObject(Seq.empty)
+  def empty = new JsObject(createFieldsMap(Nil))
 
   /** Identity writes */
   implicit def writes: OWrites[JsObject] = OWrites[JsObject](identity)
