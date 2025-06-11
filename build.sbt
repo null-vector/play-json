@@ -82,7 +82,7 @@ val scalacOpts = Seq(
 )
 
 // Customise sbt-dynver's behaviour to make it work with tags which aren't v-prefixed
-ThisBuild / dynverVTagPrefix := true
+ThisBuild / dynverVTagPrefix := false
 ThisBuild / isSnapshot := false
 ThisBuild / isVersionStable := true
 
