@@ -82,16 +82,16 @@ val scalacOpts = Seq(
 )
 
 // Customise sbt-dynver's behaviour to make it work with tags which aren't v-prefixed
-ThisBuild / dynverVTagPrefix := false
-ThisBuild / isSnapshot := false
-ThisBuild / isVersionStable := true
+//ThisBuild / dynverVTagPrefix := false
+ThisBuild / version := "3.1.0-eclipse-coll-SNAPSHOT"
+//ThisBuild / isVersionStable := true
 
 // Sanity-check: assert that version comes from a tag (e.g. not a too-shallow clone)
 // https://github.com/dwijnand/sbt-dynver/#sanity-checking-the-version
-Global / onLoad := (Global / onLoad).value.andThen { s =>
-  dynverAssertTagVersion.value
-  s
-}
+//Global / onLoad := (Global / onLoad).value.andThen { s =>
+//  dynverAssertTagVersion.value
+//  s
+//}
 
 lazy val commonSettings = Def.settings(
   // Do not buffer test output
