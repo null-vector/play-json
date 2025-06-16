@@ -219,8 +219,10 @@ private[jackson] class JsValueDeserializer(factory: TypeFactory, klass: Class[?]
 
       case JsonTokenId.ID_FIELD_NAME =>
         parserContext match {
-          case (c: ReadingMap) :: stack => (None, c.setField(jp.getCurrentName) +: stack)
-          case _                        => throw new RuntimeException("We should be reading map, something got wrong")
+          case (c: ReadingMap) :: stack =>
+            val fieldName = jp.getCurrentName.intern()
+            (None, c.setField(fieldName) +: stack)
+          case _ => throw new RuntimeException("We should be reading map, something got wrong")
         }
 
       case JsonTokenId.ID_END_OBJECT =>
